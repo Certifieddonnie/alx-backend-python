@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """ Unittesting for Utils """
 import unittest
-from utils import access_nested_map, get_json
+from utils import access_nested_map, get_json, memoize
 from parameterized import parameterized, parameterized_class
-from unittest.mock import patch, MagicMock
-
+from unittest.mock import patch, MagicMock, Mock
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -18,7 +17,7 @@ class TestAccessNestedMap(unittest.TestCase):
     def test_access_nested_map(self, nested_map, path, result):
         """ Test the access nested map """
         self.assertEqual(access_nested_map(nested_map, path), result)
-    
+
     @parameterized.expand([
         ({}, ("a",)),
         ({"a": 1}, ("a", "b")),
@@ -45,3 +44,32 @@ class TestGetJson(unittest.TestCase):
         mock_get.return_value = mock_response
         self.assertEqual(get_json(test_url), test_payload)
 
+
+class TestMemoize(unittest.TestCase):
+    """ Test for memoization """
+
+    def test_memoize(self):
+        """ Memoize test """
+
+        class TestClass:
+            """ example """
+
+            def a_method(self):
+                """ example method """
+                return 42
+
+            @memoize
+            def a_property(self):
+                """ example property """
+                return self.a_method()
+
+        test_obj = TestClass()
+        with patch.object(test_obj, 'a_method') as mock_method:
+            mock_method.return_value = 42
+
+            res1 = test_obj.a_property
+            res2 = test_obj.a_property
+
+            self.assertEqual(res1, 42)
+            self.assertEqual(res2, 42)
+            mock_method.assert_called_once()
